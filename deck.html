@@ -75,6 +75,20 @@ h2.t{font-size:48px;line-height:1.06;margin-top:12px;font-weight:700}
 .flowp{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:16px}
 .flowp span{padding:9px 11px;border-radius:10px;background:rgba(13,148,136,.08);border:1px solid rgba(13,148,136,.3);font-size:15px;white-space:nowrap}
 .flowp i{font-style:normal;color:var(--teal);font-weight:700}
+/* encoder section (Manav) — reuses card/chip/stat language */
+.pipe{display:flex;align-items:stretch;gap:14px;margin-top:28px}
+.pipe .node{flex:1;display:flex;flex-direction:column;gap:10px;min-height:210px}
+.pipe .node .num{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font:700 18px 'Space Grotesk';color:#fff;background:var(--blue)}
+.pipe .arrow{align-self:center;font:700 28px 'Space Grotesk';color:var(--blue);opacity:.55;padding:0 2px}
+.cmp{display:grid;grid-template-columns:140px 1fr 1fr;gap:14px 18px;align-items:end}
+.cmp .h{font:600 13px 'Space Grotesk';letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.cmp .pair{display:flex;gap:8px;align-items:flex-end;height:160px}
+.cmp .bar{flex:1;border-radius:10px 10px 4px 4px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:8px 4px 10px;min-height:12px;color:#fff;font:700 15px 'Space Grotesk'}
+.cmp .bar span{font:600 12px/1.2 Inter,sans-serif;opacity:.92;margin-top:6px}
+.cmp .lbl{font:700 18px 'Space Grotesk'}
+.steps4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:28px}
+.steps4 .card{min-height:220px}
+.badge{display:inline-flex;align-items:center;gap:8px;font:600 14px 'Space Grotesk';padding:8px 12px;border-radius:999px;border:1px solid rgba(37,99,235,.3);background:rgba(37,99,235,.08);color:var(--blue)}
 /* HUD */
 #hud{position:absolute;left:84px;right:84px;bottom:22px;height:30px;display:flex;align-items:center;justify-content:space-between;font-size:15px;color:var(--muted);z-index:20;pointer-events:none}
 #hud .who{display:flex;align-items:center;gap:10px}
@@ -146,135 +160,130 @@ h2.t{font-size:48px;line-height:1.06;margin-top:12px;font-weight:700}
  </div>
 </section>
 
-<!-- 5 · ENCODER: why it matters -->
+<!-- Verified encoder metrics (hard-coded for chart heights; sources in comments):
+     mnv3l-v2 encoder-mnv3l-s0-20261116:
+       val AP 0.5433876448474303 ROC 0.5567270718198268
+       test AP 0.5036127250414055 ROC 0.4925699293753436
+     dinov2s-frozen-v1 encoder-dinov2s-frozen-s0-20261117:
+       val AP 0.8763608875545676 ROC 0.8391302819484521
+       test AP 0.7623474470110374 ROC 0.7238447211088898
+     Latency (Ayush): runs/latency/latency_ayush-ws-cuda_*.json + cpu full pipeline.
+-->
+<!-- 3 · ENCODER: why it matters -->
 <section class="slide" data-who="manav">
  <div class="pad">
   <div class="kicker a" style="color:var(--blue)">Encoders · Manav</div>
-  <h2 class="t a" style="--d:.1s">If the tile encoder fails, <span class="blue">nothing downstream can recover ranking</span></h2>
-  <div class="row" style="margin-top:36px">
-   <div class="card step a" style="--d:.25s"><span class="b" style="background:var(--blue)">1</span><b>45 tiles</b><p>Each frame becomes overlapping 224 px tiles. The encoder writes one feature per tile.</p></div>
-   <div class="card step a" style="--d:.35s"><span class="b" style="background:var(--blue)">2</span><b>Cached features</b><p>Temporal heads and the alarm only see the cache. Bad features stay bad.</p></div>
-   <div class="card step a" style="--d:.45s"><span class="b" style="background:var(--blue)">3</span><b>Weak labels</b><p>FIgLib has no public masks on train/val/test. Training uses image-level MIL.</p></div>
-   <div class="card step dark a" style="--d:.55s"><span class="b" style="background:var(--blue)">4</span><b>Judge ranking</b><p>On a ~50% positive split, AP near 0.5 means chance. F1 alone can lie.</p></div>
+  <h2 class="t a" style="--d:.1s">Why the encoder matters</h2>
+  <div class="pipe a" style="--d:.2s">
+   <div class="card node"><span class="num">1</span><b style="font:700 26px 'Space Grotesk'">45 tiles</b><p class="muted" style="font-size:18px;line-height:1.4">Frame → overlapping 224 px tiles</p></div>
+   <div class="arrow a" style="--d:.3s">→</div>
+   <div class="card node" style="border-color:rgba(37,99,235,.35)"><span class="num">2</span><b style="font:700 26px 'Space Grotesk';color:var(--blue)">Encoder</b><p class="muted" style="font-size:18px;line-height:1.4">One feature vector per tile</p></div>
+   <div class="arrow a" style="--d:.4s">→</div>
+   <div class="card node"><span class="num">3</span><b style="font:700 26px 'Space Grotesk'">Temporal</b><p class="muted" style="font-size:18px;line-height:1.4">Heads read the feature cache only</p></div>
+   <div class="arrow a" style="--d:.5s">→</div>
+   <div class="card node"><span class="num">4</span><b style="font:700 26px 'Space Grotesk'">Alarm</b><p class="muted" style="font-size:18px;line-height:1.4">θ / k on the smoke score</p></div>
   </div>
-  <div class="card a" style="--d:.7s;margin-top:28px">
-   <span class="chip" style="background:rgba(37,99,235,.1);color:var(--blue);border-color:rgba(37,99,235,.35)">One-seed proxy · not a formal 3×3 E1</span>
-   <p style="font-size:20px;line-height:1.5;margin-top:14px;color:#334155">We compare seed-0 MobileNet <span class="mono">mnv3l-v2</span> against frozen DINOv2 <span class="mono">dinov2s-frozen-v1</span>. Fine-tuned DINOv2 and multi-seed E1 were cut.</p>
-  </div>
- </div>
-</section>
-
-<!-- 6 · ENCODER: MobileNet collapse -->
-<section class="slide" data-who="manav">
- <div class="pad">
-  <div class="kicker a" style="color:var(--blue)">Encoders · MobileNet collapse</div>
-  <h2 class="t a" style="--d:.1s">MobileNet’s F1 looked fine. <span class="coral">Ranking was near chance.</span></h2>
-  <div class="row" style="margin-top:32px;gap:20px">
-   <div class="card stat a" style="--d:.25s;flex:1"><div class="n coral">0.543</div><div class="l">val AP · <span class="mono">mnv3l-v2</span> · near chance</div></div>
-   <div class="card stat a" style="--d:.35s;flex:1"><div class="n coral">0.557</div><div class="l">val ROC-AUC · same run</div></div>
-   <div class="card stat a" style="--d:.45s;flex:1"><div class="n">0.670</div><div class="l">tuned F1 ≈ always-smoke 0.670</div></div>
-   <div class="card stat a" style="--d:.55s;flex:1"><div class="n ember">0</div><div class="l">positive tiles in C3 on train/val/test</div></div>
-  </div>
-  <div class="card a" style="--d:.7s;margin-top:28px;padding:26px 28px">
-   <div class="met">
-    <span class="k" style="color:var(--blue)">Labels</span><span>Positives are <span class="mono">SOURCE_NONE</span> with tile targets <span class="mono">−1</span>. Tile BCE never sees smoke.</span>
-    <span class="k" style="color:var(--blue)">Lesson</span><span>Weak image-level MIL can collapse ranking while F1 stays near the class prior. Prefer AP / ROC.</span>
-   </div>
-   <p class="note" style="margin-top:16px">Exact C8: AP 0.5433876448474303, ROC-AUC 0.5567270718198268 · run <span class="mono">encoder-mnv3l-s0-20261116</span>. Not from <span class="mono">tables_val.csv</span>.</p>
+  <div class="card a" style="--d:.65s;margin-top:28px;padding:22px 26px;display:flex;align-items:center;justify-content:space-between;gap:24px">
+   <p style="font-size:24px;line-height:1.35;font-weight:600;color:#0f172a;max-width:980px">If the encoder does not represent smoke well, <span class="blue">later stages cannot invent ranking</span>.</p>
+   <span class="chip" style="background:rgba(37,99,235,.1);color:var(--blue);border-color:rgba(37,99,235,.35);white-space:nowrap">Takeaway</span>
   </div>
  </div>
 </section>
 
-<!-- 7 · ENCODER: DINOv2 results -->
+<!-- 4 · ENCODER: MobileNet vs DINOv2 -->
 <section class="slide" data-who="manav">
  <div class="pad">
-  <div class="kicker a" style="color:var(--blue)">Encoders · DINOv2 frozen</div>
-  <h2 class="t a" style="--d:.1s">Frozen DINOv2 clears the ranking bar. <span class="teal">Same weak labels.</span></h2>
-  <div class="card a" style="--d:.25s;margin-top:28px">
-   <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:14px 18px;align-items:center;font-size:20px">
-    <span class="h" style="font:600 13px 'Space Grotesk';letter-spacing:.14em;text-transform:uppercase;color:var(--dim)">encoder</span>
-    <span class="h" style="font:600 13px 'Space Grotesk';letter-spacing:.14em;text-transform:uppercase;color:var(--dim)">val AP</span>
-    <span class="h" style="font:600 13px 'Space Grotesk';letter-spacing:.14em;text-transform:uppercase;color:var(--dim)">val ROC</span>
-    <span class="h" style="font:600 13px 'Space Grotesk';letter-spacing:.14em;text-transform:uppercase;color:var(--dim)">test AP</span>
-    <span><b>MobileNet</b> <span class="dim mono">mnv3l-v2</span></span><span class="mono">0.543</span><span class="mono">0.557</span><span class="mono">0.504</span>
-    <span><b>DINOv2 frozen</b> <span class="dim mono">dinov2s-frozen-v1</span></span><span class="mono teal"><b>0.876</b></span><span class="mono teal"><b>0.839</b></span><span class="mono teal"><b>0.762</b></span>
+  <div class="kicker a" style="color:var(--blue)">Encoders · one-seed proxy</div>
+  <h2 class="t a" style="--d:.1s">MobileNet collapsed under weak tile labels</h2>
+  <div class="row" style="margin-top:22px;align-items:stretch">
+   <div class="card a" style="--d:.25s;flex:1.35;padding:22px 24px">
+    <!-- heights ≈ AP * 160px; exact values in HTML comments above -->
+    <div class="cmp">
+     <span></span><span class="h">Average precision</span><span class="h">ROC-AUC</span>
+     <span class="lbl">Val</span>
+     <div class="pair">
+      <div class="bar grow" style="--d:.35s;height:87px;background:#94a3b8">0.543<span>MN</span></div>
+      <div class="bar grow" style="--d:.4s;height:140px;background:var(--teal)">0.876<span>DINO</span></div>
+     </div>
+     <div class="pair">
+      <div class="bar grow" style="--d:.45s;height:89px;background:#94a3b8">0.557<span>MN</span></div>
+      <div class="bar grow" style="--d:.5s;height:134px;background:var(--teal)">0.839<span>DINO</span></div>
+     </div>
+     <span class="lbl">Test</span>
+     <div class="pair">
+      <div class="bar grow" style="--d:.55s;height:81px;background:#cbd5e1;color:#334155">0.504<span>MN</span></div>
+      <div class="bar grow" style="--d:.6s;height:122px;background:var(--teal)">0.762<span>DINO</span></div>
+     </div>
+     <div class="pair">
+      <div class="bar grow" style="--d:.65s;height:79px;background:#cbd5e1;color:#334155">0.493<span>MN</span></div>
+      <div class="bar grow" style="--d:.7s;height:116px;background:var(--teal)">0.724<span>DINO</span></div>
+     </div>
+    </div>
+    <p class="note" style="margin-top:14px">Grey = MobileNet <span class="mono">mnv3l-v2</span> · Teal = frozen DINOv2 <span class="mono">dinov2s-frozen-v1</span> · seed 0 only</p>
    </div>
-  </div>
-  <div class="row" style="margin-top:24px">
-   <div class="card a" style="--d:.45s;flex:1"><span class="chip">n = 1 seed</span><p style="font-size:18px;line-height:1.45;margin-top:12px;color:#334155">Proxy evidence only. No mean±std, no significance, no fine-tuned DINOv2.</p></div>
-   <div class="card a" style="--d:.55s;flex:1"><span class="chip">Test held out</span><p style="font-size:18px;line-height:1.45;margin-top:12px;color:#334155">Thresholds tuned on val. Test uses that operating point once.</p></div>
-  </div>
-  <p class="note a" style="--d:.7s;margin-top:18px">Sources: <span class="mono">encoder-dinov2s-frozen-s0-20261117/metrics_{val,test}.json</span> and the MobileNet pair above.</p>
- </div>
-</section>
-
-<!-- 8 · ENCODER: reload + extract -->
-<section class="slide" data-who="manav">
- <div class="pad">
-  <div class="kicker a" style="color:var(--blue)">Encoders · reload fix</div>
-  <h2 class="t a" style="--d:.1s">PR #26 loads the <span class="blue">real</span> DINOv2, not the offline stub</h2>
-  <div class="row" style="margin-top:36px">
-   <div class="card a" style="--d:.25s;flex:1.2">
-    <span class="chip" style="background:rgba(37,99,235,.1);color:var(--blue);border-color:rgba(37,99,235,.35)">Verified on real checkpoint</span>
-    <p style="font-size:22px;line-height:1.45;margin-top:16px;color:#334155"><span class="mono">encoder-dinov2s-frozen-s0-20261117</span> rebuilt as hub <span class="mono">DinoVisionTransformer</span>. D = 384. 256 patch tokens.</p>
-    <p style="font-size:20px;line-height:1.45;margin-top:14px;color:#334155">One-fire extract: shape <span class="mono">(81, 45, 384)</span>, float16, valid C4 metadata. Isolated cache — shared <span class="mono">dinov2s-frozen-v1</span> untouched.</p>
-   </div>
-   <div class="card a" style="--d:.4s;flex:.9">
-    <div class="n blue" style="font:700 42px/1 'Space Grotesk'">CPU</div>
-    <div class="l" style="margin-top:14px">Validation used cached hub weights. No GPU timing claim. No new quality claim beyond existing C8.</div>
+   <div style="flex:.9;display:flex;flex-direction:column;gap:16px">
+    <div class="card a" style="--d:.35s">
+     <span class="chip" style="background:rgba(225,29,72,.08);color:var(--coral);border-color:rgba(225,29,72,.3)">C3 labels</span>
+     <div class="n coral" style="font-size:56px;margin-top:12px">0</div>
+     <div class="l">positive tiles on train / val / test. Positives = <span class="mono">SOURCE_NONE</span> / tile <span class="mono">−1</span></div>
+    </div>
+    <div class="card a" style="--d:.5s">
+     <span class="chip" style="background:rgba(37,99,235,.1);color:var(--blue);border-color:rgba(37,99,235,.35)">One-seed proxy · not formal 3×3 E1</span>
+     <p style="font-size:18px;line-height:1.45;margin-top:12px;color:#334155">Image-level MIL had no positive tile supervision. Prefer AP / ROC over F1.</p>
+    </div>
    </div>
   </div>
  </div>
 </section>
 
-<!-- 9 · ENCODER: reproducibility -->
+<!-- 5 · ENCODER: reload + reproducibility -->
 <section class="slide" data-who="manav">
  <div class="pad">
-  <div class="kicker a" style="color:var(--blue)">Encoders · reproducibility</div>
-  <h2 class="t a" style="--d:.1s">Fresh clone passes. Real MobileNet C5 <span class="teal">rescores bit-identically</span></h2>
-  <div class="row" style="margin-top:40px">
-   <div class="card step a" style="--d:.25s"><span class="b" style="background:var(--blue)">✓</span><b>Fresh clone</b><p>Install, fake data, 255 tests, full smoke test — all PASS on macOS.</p></div>
-   <div class="card step a" style="--d:.35s"><span class="b" style="background:var(--blue)">✓</span><b>Val F1</b><p><span class="mono">0.6704684317718942</span> matches Ayush’s MobileNet <span class="mono">metrics_val.json</span>.</p></div>
-   <div class="card step a" style="--d:.45s"><span class="b" style="background:var(--blue)">✓</span><b>Test F1</b><p><span class="mono">0.6717329757115184</span> with the same val-tuned operating point.</p></div>
-   <div class="card step dark a" style="--d:.55s"><span class="b" style="background:var(--blue)">∅</span><b>Outside Git</b><p>Checkpoints, Drive files and caches stay in local <span class="mono">SMOKESENTRY_DATA</span>.</p></div>
+  <div class="kicker a" style="color:var(--blue)">Encoders · loader</div>
+  <h2 class="t a" style="--d:.1s">DINOv2 reload and reproducibility</h2>
+  <div class="steps4 a" style="--d:.2s">
+   <div class="card"><span class="num" style="width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font:700 18px 'Space Grotesk';color:#fff;background:var(--blue);margin-bottom:12px">1</span><b style="font:700 22px 'Space Grotesk'">Saved run</b><p class="muted" style="font-size:17px;line-height:1.4;margin-top:8px"><span class="mono">…-20261117</span><br>real <span class="mono">best.pt</span></p></div>
+   <div class="card"><span class="num" style="width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font:700 18px 'Space Grotesk';color:#fff;background:var(--blue);margin-bottom:12px">2</span><b style="font:700 22px 'Space Grotesk'">Hub ViT</b><p class="muted" style="font-size:17px;line-height:1.4;margin-top:8px"><span class="mono">DinoVisionTransformer</span><br>not the offline stub</p></div>
+   <div class="card"><span class="num" style="width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font:700 18px 'Space Grotesk';color:#fff;background:var(--blue);margin-bottom:12px">3</span><b style="font:700 22px 'Space Grotesk'">Reload</b><p class="muted" style="font-size:17px;line-height:1.4;margin-top:8px">D = <b style="color:var(--blue)">384</b><br>patch tokens 256 × 384</p></div>
+   <div class="card"><span class="num" style="width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font:700 18px 'Space Grotesk';color:#fff;background:var(--blue);margin-bottom:12px">4</span><b style="font:700 22px 'Space Grotesk'">Extract</b><p class="muted" style="font-size:17px;line-height:1.4;margin-top:8px"><span class="mono">(81, 45, 384)</span> float16<br>C4 metadata OK</p></div>
   </div>
- </div>
-</section>
-
-<!-- 10 · ENCODER: latency implications -->
-<section class="slide" data-who="manav">
- <div class="pad">
-  <div class="kicker a" style="color:var(--blue)">Encoders · cost</div>
-  <h2 class="t a" style="--d:.1s">DINOv2 is slower — and still <span class="teal">fits a one-minute camera</span></h2>
-  <div class="row" style="margin-top:36px">
-   <div class="card stat a" style="--d:.25s;flex:1"><div class="n">9.6 ms</div><div class="l">MobileNet encoder · Ayush GPU</div></div>
-   <div class="card stat a" style="--d:.35s;flex:1"><div class="n teal">50.6 ms</div><div class="l">DINOv2 encoder · Ayush GPU</div></div>
-   <div class="card stat a" style="--d:.45s;flex:1"><div class="n ember">51.4 ms</div><div class="l">full pipeline · Ayush GPU</div></div>
-   <div class="card stat a" style="--d:.55s;flex:1"><div class="n">0.88 s</div><div class="l">full pipeline · Ayush CPU</div></div>
-  </div>
-  <div class="card a" style="--d:.7s;margin-top:28px">
-   <p style="font-size:20px;line-height:1.5;color:#334155">Provenance: Ayush workstation <span class="mono">runs/latency/*.json</span> (forward only). <b>Not</b> Manav’s laptop — M-5 local CPU production timing is still pending.</p>
-   <p class="note" style="margin-top:12px">Temporal context (separate from encoder bake-off): GRU T8 on DINOv2 features, test AP 0.795 ± 0.009, ~2.0 FA/camera-hour across three seeds.</p>
-  </div>
- </div>
-</section>
-
-<!-- 11 · ENCODER: takeaway -->
-<section class="slide" data-who="manav">
- <div class="pad">
-  <div class="kicker a" style="color:var(--blue)">Encoders · takeaway</div>
-  <h2 class="t a" style="--d:.1s">Recommendation: <span class="teal">frozen DINOv2</span> under the available evidence</h2>
-  <div class="card a" style="--d:.25s;margin-top:36px;padding:32px">
-   <div class="met">
-    <span class="k" style="color:var(--blue)">Use</span><span>DINOv2 frozen (`dinov2s-frozen-v1`) as the encoder for temporal work and the demo.</span>
-    <span class="k" style="color:var(--coral)">Avoid</span><span>Reading MobileNet F1 as success. Prefer AP / ROC. Do not quote stale <span class="mono">tables_val.csv</span> MobileNet rows.</span>
-    <span class="k" style="color:var(--ember)">Limits</span><span>One-seed proxy. No fine-tuned DINOv2 E1. Not production-ready language. Multi-seed E1 was cut.</span>
+  <div class="row" style="margin-top:24px;gap:16px">
+   <div class="card a" style="--d:.45s;flex:1.2;display:flex;align-items:center;gap:18px">
+    <div class="n blue" style="font-size:40px">CPU</div>
+    <div class="l" style="margin:0">Loader check only — cached hub weights. No GPU timing or new quality claim.</div>
+   </div>
+   <div class="card a" style="--d:.55s;flex:1;display:flex;align-items:center">
+    <span class="badge">M-7 · MobileNet val/test F1 bit-identical</span>
    </div>
   </div>
  </div>
 </section>
 
-<!-- 12 · LATENCY -->
+<!-- 6 · ENCODER: accuracy, speed, takeaway -->
+<section class="slide" data-who="manav">
+ <div class="pad">
+  <div class="kicker a" style="color:var(--blue)">Encoders · conclusion</div>
+  <h2 class="t a" style="--d:.1s">Accuracy, speed, and takeaway</h2>
+  <div class="row" style="margin-top:28px;gap:20px">
+   <div class="card a" style="--d:.25s;flex:1.15">
+    <span class="chip">Ayush latency · model-forward</span>
+    <div class="lat" style="margin-top:18px">
+     <span>MobileNet encoder</span><div class="tr grow" style="--d:.35s"><i style="width:19%;background:#94a3b8"></i></div><span class="v">9.63</span>
+     <span>DINOv2 encoder</span><div class="tr grow" style="--d:.45s"><i style="width:99%;background:var(--teal)"></i></div><span class="v">50.63</span>
+     <span><b>Full pipeline</b></span><div class="tr grow" style="--d:.55s"><i style="width:100%;background:var(--ember)"></i></div><span class="v">51.42</span>
+    </div>
+    <p class="note" style="margin-top:14px">GPU ms / frame (45 tiles). CPU full pipeline ≈ <b>0.88 s</b>. Not Manav’s laptop.</p>
+   </div>
+   <div class="card a" style="--d:.4s;flex:.95;padding:26px">
+    <span class="chip" style="background:rgba(13,148,136,.1);color:var(--teal);border-color:rgba(13,148,136,.35)">Takeaway</span>
+    <p style="font-size:26px;line-height:1.35;margin-top:18px;font-weight:600;color:#0f172a">Frozen DINOv2 is the stronger <span class="teal">one-seed proxy</span> encoder.</p>
+    <p style="font-size:19px;line-height:1.45;margin-top:16px;color:#334155">Pipeline stays real-time for ~1 frame / minute cameras. Formal 3×3 E1 was cut — no production-ready claim.</p>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- 7 · LATENCY (Ayush) -->
 <section class="slide" data-who="ayush">
  <div class="pad">
   <div class="kicker a">Deployment · latency</div>
@@ -300,7 +309,7 @@ h2.t{font-size:48px;line-height:1.06;margin-top:12px;font-weight:700}
  </div>
 </section>
 
-<!-- 4 · DEMO -->
+<!-- 8 · DEMO (Ayush) -->
 <section class="slide" data-who="ayush">
  <div class="pad">
   <div class="kicker a">Live demo · replay app</div>

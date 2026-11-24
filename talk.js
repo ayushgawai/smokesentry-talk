@@ -61,146 +61,80 @@ window.TALK = {
    ]
   },
   {
-   "title": "Encoders: ranking starts at the tiles",
+   "title": "Why the encoder matters",
    "who": "manav",
-   "secs": 70,
+   "secs": 40,
    "say": [
-    "My part is the tile encoder. Every frame becomes forty-five tiles, and those features feed every temporal head and the alarm.",
-    "If the encoder cannot rank smoke above clear sky, later stages cannot invent that signal.",
-    "We only have image-level labels, so training uses multiple-instance learning. That makes ranking metrics essential.",
-    "Important caveat: the encoder comparison is a one-seed proxy. The formal three-encoder, three-seed E1 sweep was cut, and fine-tuned DINOv2 was not run."
+    "My section is the tile encoder — the first place SmokeSentry can quietly fail.",
+    "Each frame becomes forty-five tiles. The encoder turns those into features. Temporal heads and the alarm only ever see that cache.",
+    "So if the encoder does not separate smoke from clear sky, later stages cannot invent that ranking."
    ],
    "left": [
     "Exact MobileNet versus DINOv2 numbers.",
-    "Why F1 misled us on MobileNet.",
-    "Whether fine-tuning DINOv2 would help."
+    "Why F1 can mislead on a balanced split."
    ],
    "qa": [
-    { "q": "Why not just look at F1?", "a": "Validation is about half positive, so always saying smoke already scores F1 about 0.67. A collapsed encoder can match that F1 while ranking near chance." },
-    { "q": "Is this a full E1 matrix?", "a": "No. It is seed zero only: MobileNet mnv3l-v2 versus frozen DINOv2 dinov2s-frozen-v1. We do not claim mean, standard deviation, or seed generalization." },
-    { "q": "Did you evaluate fine-tuned DINOv2?", "a": "Not in a formal E1 artifact. That job was cut with the rest of the nine-run matrix." }
+    { "q": "Why not skip straight to the temporal model?", "a": "Temporal heads train on cached encoder features. A collapsed encoder freezes a near-chance ranking into every head that follows." },
+    { "q": "Is this the full E1 matrix?", "a": "No — that is covered on the next slide. Here I only need the pipeline story: tiles, encoder, temporal, alarm." }
    ]
   },
   {
-   "title": "MobileNet collapse: F1 hid chance ranking",
+   "title": "MobileNet collapsed under weak tile labels",
    "who": "manav",
-   "secs": 85,
+   "secs": 45,
    "say": [
-    "MobileNet looked fine if you only read tuned F1 on validation: about 0.670, basically the always-smoke baseline.",
-    "Average precision was 0.543 and ROC-AUC 0.557. That is near chance on a balanced split.",
-    "At a fixed threshold of 0.5, F1 was zero because almost no scores crossed 0.5.",
-    "When we inspected tile labels, train, val and test had zero positive tiles. Positives are marked SOURCE_NONE with tile targets of minus one, so tile loss never sees smoke.",
-    "That is strong evidence that weak image-level MIL without positive tile supervision can collapse ranking, while F1 stays near the class prior. We do not claim it is the only possible cause."
+    "This is a one-seed proxy, not a formal three-by-three E1 sweep.",
+    "On validation, MobileNet average precision is about 0.54 and ROC about 0.56 — near chance. Frozen DINOv2 reaches about 0.88 AP and 0.84 ROC. Test keeps the same gap.",
+    "C3 had zero positive tiles. Positives are SOURCE_NONE with tile targets of minus one, so image-level MIL never saw a positive tile label.",
+    "That is why we trust AP and ROC here, not F1 alone."
    ],
    "left": [
-    "The exact run id.",
+    "Exact run ids.",
     "Whether architecture capacity also mattered.",
-    "How DINOv2 compares on the same protocol."
+    "Fine-tuned DINOv2."
    ],
    "qa": [
-    { "q": "Which run is that?", "a": "encoder-mnv3l-s0-20261116, cache mnv3l-v2. Numbers are from its metrics_val.json, not from the stale tables_val.csv MobileNet rows." },
-    { "q": "Are you saying MIL is proven broken?", "a": "No. We say the label contract gave the model no positive tile targets, and the ranking collapse is consistent with that weakness. Other factors can still matter." },
-    { "q": "Why ignore tables_val.csv?", "a": "Its MobileNet aggregate mixes v1 and v2. We copy only from metrics_*.json." }
+    { "q": "Which runs?", "a": "MobileNet encoder-mnv3l-s0-20261116, cache mnv3l-v2. DINOv2 encoder-dinov2s-frozen-s0-20261117, cache dinov2s-frozen-v1. Values from metrics_*.json only." },
+    { "q": "Did you evaluate fine-tuned DINOv2?", "a": "No formal E1 fine-tuned artifact. That job was cut with the multi-seed matrix." },
+    { "q": "Why not tables_val.csv?", "a": "Its MobileNet rows mix v1 and v2. We never quote those." }
    ]
   },
   {
-   "title": "DINOv2 frozen: same labels, real ranking",
+   "title": "DINOv2 reload and reproducibility",
    "who": "manav",
-   "secs": 75,
+   "secs": 40,
    "say": [
-    "Frozen DINOv2, trained under the same weak labels, is a different story.",
-    "On validation it reaches average precision 0.876 and ROC-AUC 0.839. On held-out test, average precision is 0.762.",
-    "MobileNet on the same protocol stays near chance on both splits.",
-    "Thresholds were tuned on validation only. This is still n equals one, so we do not invent error bars for the encoder comparison."
-   ],
-   "left": [
-    "Test ROC-AUC.",
-    "Temporal gains on top of DINOv2.",
-    "Why we still call it a proxy."
-   ],
-   "qa": [
-    { "q": "What is the test ROC-AUC?", "a": "0.724 for DINOv2 frozen and 0.493 for MobileNet, both from metrics_test.json with the validation operating point." },
-    { "q": "Is the model production ready?", "a": "No. We say frozen DINOv2 is the stronger encoder candidate under the available one-seed evidence. Multi-seed E1 was cut." },
-    { "q": "Run id?", "a": "encoder-dinov2s-frozen-s0-20261117, cache dinov2s-frozen-v1." }
-   ]
-  },
-  {
-   "title": "Reload fix: real hub DINOv2 on the checkpoint",
-   "who": "manav",
-   "secs": 70,
-   "say": [
-    "Production DINOv2 checkpoints cannot load onto the offline stub used in smoke tests.",
-    "Pull request 26 fixed the reload path so we build the real facebookresearch hub backbone, then load weights, and fail clearly if hub access is missing.",
-    "I validated that on the real November 17 checkpoint on CPU: a DinoVisionTransformer, dimension 384, 256 patch tokens.",
-    "One-fire feature extraction produced shape 81 by 45 by 384 in float16 with valid cache metadata, in an isolated folder so we did not overwrite the shared cache.",
-    "That checks loader correctness. It is not a GPU benchmark and not a new quality claim."
+    "Production checkpoints need the real hub DINOv2, not the offline stub from smoke tests.",
+    "On the November 17 run we rebuilt a DinoVisionTransformer, loaded weights, and extracted one fire: dimension 384, patch tokens 256 by 384, output shape 81 by 45 by 384 in float16, C4 metadata valid.",
+    "That is a loader check on CPU. Separately, M-7 rescored Ayush’s MobileNet predictions and matched validation and test F1 bit for bit."
    ],
    "left": [
     "Which fire was extracted.",
-    "Whether Grad-CAM needed a separate loader.",
-    "Hub SSL issues on a fresh machine."
+    "GPU timing.",
+    "Whether quality changed after the reload fix."
    ],
    "qa": [
-    { "q": "Which fire?", "a": "Check fire 20160604_FIRE_rm-n-mobo-c, eighty-one frames." },
-    { "q": "Did this need a GPU?", "a": "No. The validation ran on CPU with cached hub weights." },
-    { "q": "Is the model better after the reload fix?", "a": "The fix restores the architecture the checkpoint expects. Quality numbers still come from the existing metrics JSON for that run." }
+    { "q": "Which fire?", "a": "Check fire 20160604_FIRE_rm-n-mobo-c, eighty-one frames, isolated encoder id so the shared cache was not overwritten." },
+    { "q": "New quality claim?", "a": "No. Ranking numbers still come from the existing metrics JSON for that run." }
    ]
   },
   {
-   "title": "Reproducibility: clone, tests, bit-identical rescoring",
+   "title": "Accuracy, speed, and takeaway",
    "who": "manav",
-   "secs": 65,
+   "secs": 40,
    "say": [
-    "On a fresh clone we installed the project, generated fake data, ran two hundred fifty-five tests, and passed the full smoke test.",
-    "Separately, rescoring Ayush’s MobileNet predictions reproduced validation F1 0.6704684317718942 and test F1 0.6717329757115184 bit for bit.",
-    "Checkpoints and Drive artifacts stayed outside Git."
+    "Putting quality next to cost: Ayush’s GPU forward timings are about 9.6 milliseconds for MobileNet, 50.6 for DINOv2, and 51.4 for the full pipeline. On that workstation’s CPU the full pipeline is about 0.88 seconds.",
+    "Cameras send roughly one frame a minute, so even the slower encoder stays inside the budget.",
+    "Bottom line: frozen DINOv2 is the stronger one-seed proxy encoder. Formal E1 was cut, and we are not calling the system production ready."
    ],
    "left": [
-    "How long the smoke test took.",
-    "Whether DINOv2 was rescored the same way.",
-    "Where artifacts live."
-   ],
-   "qa": [
-    { "q": "Why MobileNet for the bit-identical check?", "a": "It was the available real C5 artifact for M-7. The point is that evaluation code plus shared predictions reproduce Ayush’s metrics JSON." },
-    { "q": "Are runs committed?", "a": "No. They stay under local SMOKESENTRY_DATA or the team Drive." }
-   ]
-  },
-  {
-   "title": "Latency: DINOv2 fits the camera budget",
-   "who": "manav",
-   "secs": 70,
-   "say": [
-    "Quality and cost are separate. On Ayush’s workstation GPU, MobileNet encoding is about 9.6 milliseconds per frame, DINOv2 about 50.6, and the full pipeline about 51.4.",
-    "On that machine’s CPU the full pipeline is about 0.88 seconds. Cameras send a frame a minute, so both stay inside the budget.",
-    "These are Ayush’s forward-only JSON benchmarks, not my laptop. Local production CPU timing for M-5 is still pending.",
-    "As temporal context only, GRU T8 on DINOv2 features reaches test average precision 0.795 plus or minus 0.009 with about two false alarms per camera-hour across three seeds."
-   ],
-   "left": [
-    "Exact JSON file names.",
-    "Decode and tiling time.",
+    "Manav laptop CPU timings.",
+    "Temporal GRU gains.",
     "Edge hardware."
    ],
    "qa": [
-    { "q": "Did you measure this on your laptop?", "a": "No. I am citing Ayush’s latency JSON. My local M-5 production CPU run is still outstanding." },
-    { "q": "Does GRU T8 change the encoder conclusion?", "a": "It is a temporal result on the DINOv2 cache. It does not replace the missing multi-seed encoder matrix." }
-   ]
-  },
-  {
-   "title": "Encoder takeaway",
-   "who": "manav",
-   "secs": 55,
-   "say": [
-    "Under the available one-seed evidence, use frozen DINOv2 as the encoder.",
-    "Treat MobileNet as a collapsed ranking baseline, and do not trust F1 alone.",
-    "The reload path and reproducibility checks make that encoder usable for the rest of the pipeline.",
-    "We are not calling the system production ready, and we are not claiming a finished E1 sweep."
-   ],
-   "left": [
-    "What Naman covers next.",
-    "What Mansi covers for boxes and heatmaps."
-   ],
-   "qa": [
-    { "q": "Bottom line?", "a": "Frozen DINOv2 is the stronger encoder candidate on the verified seed-zero proxy. Formal multi-seed E1 was cut." }
+    { "q": "Are those your laptop numbers?", "a": "No. They are Ayush’s latency JSON, model-forward only. My laptop CPU run is a separate M-5 deliverable." },
+    { "q": "Is the model production ready?", "a": "No. We recommend frozen DINOv2 under the available one-seed evidence only." }
    ]
   },
   {
