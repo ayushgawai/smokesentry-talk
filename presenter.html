@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmokeSentry · Presenter View</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060a14;--panel:#0f1729;--panel2:#141e34;--line:rgba(148,163,184,.16);--ink:#e8eefc;--muted:#97a8c7;--dim:#64748b;--teal:#2dd4bf;--amber:#fbbf24;--red:#fb7185;--green:#4ade80}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+.sg{font-family:'Space Grotesk',sans-serif}
+header{display:flex;align-items:center;gap:18px;padding:12px 20px;border-bottom:1px solid var(--line);background:#080d1a;flex-wrap:wrap}
+header .brand{font:700 16px 'Space Grotesk';letter-spacing:.04em;color:var(--muted)}
+.clock{display:flex;flex-direction:column;align-items:flex-start;min-width:120px}
+.clock b{font:700 30px/1 'Space Grotesk';font-variant-numeric:tabular-nums}
+.clock span{font-size:11.5px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-top:4px}
+.pace{font:600 15px 'Space Grotesk';padding:7px 12px;border-radius:999px;background:var(--panel2)}
+.spacer{flex:1}
+button,.btn{font:600 14px Inter;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 14px;cursor:pointer;text-decoration:none}
+button:hover,.btn:hover{border-color:var(--teal)}
+button.primary{background:var(--teal);color:#04131a;border-color:var(--teal)}
+main{flex:1;display:grid;grid-template-columns:1.4fr 1fr;gap:16px;padding:16px 20px;min-height:0}
+.col{display:flex;flex-direction:column;gap:14px;min-height:0}
+.now{display:flex;align-items:center;gap:16px;padding:14px 18px;border-radius:16px;background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--c)}
+.now .who{font:700 26px 'Space Grotesk';color:var(--c)}
+.now .ttl{color:var(--muted);font-size:15px;margin-top:2px}
+.now .st{margin-left:auto;text-align:right}
+.now .st b{font:700 34px/1 'Space Grotesk';font-variant-numeric:tabular-nums}
+.now .st span{display:block;font-size:12px;color:var(--dim);margin-top:4px}
+.sbar{height:6px;border-radius:3px;background:rgba(148,163,184,.15);overflow:hidden;margin-top:8px;width:200px}
+.sbar i{display:block;height:100%;background:var(--c);transition:width .3s}
+.script{flex:1;overflow:auto;padding:22px 26px;border-radius:16px;background:var(--panel);border:1px solid var(--line)}
+.label{font:600 12px 'Space Grotesk';letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
+.script p{font-size:24px;line-height:1.55;margin-bottom:18px;color:#f1f5ff}
+.script p::before{content:attr(data-n);display:inline-block;min-width:34px;font:700 15px 'Space Grotesk';color:var(--c);vertical-align:3px}
+.handoff{margin-top:6px;padding:14px 16px;border-radius:12px;background:rgba(251,191,36,.1);border:1px dashed rgba(251,191,36,.6);font-size:17px;color:var(--amber);font-weight:600}
+.left{padding:14px 18px;border-radius:16px;background:var(--panel);border:1px solid var(--line)}
+.left ul{list-style:none;display:flex;flex-wrap:wrap;gap:8px}
+.left li{font-size:14.5px;padding:7px 11px;border-radius:10px;background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.35);color:#fecdd3}
+.prev{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.frame{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#000}
+.frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none}
+.frame .tag{position:absolute;left:8px;top:8px;z-index:2;font:700 11px 'Space Grotesk';letter-spacing:.14em;padding:4px 8px;border-radius:6px;background:rgba(0,0,0,.65)}
+.qa{flex:1;overflow:auto;padding:16px 18px;border-radius:16px;background:var(--panel);border:1px solid var(--line)}
+.qa details{border-bottom:1px solid var(--line);padding:10px 0}
+.qa details:last-child{border:0}
+.qa summary{cursor:pointer;font-weight:600;font-size:16.5px;line-height:1.4;list-style:none}
+.qa summary::before{content:"Q ";color:var(--teal);font-family:'Space Grotesk'}
+.qa details p{margin-top:8px;font-size:15.5px;line-height:1.5;color:#cbd5e1}
+.qa details p::before{content:"A ";color:var(--amber);font-weight:700;font-family:'Space Grotesk'}
+footer{padding:10px 20px 14px;border-top:1px solid var(--line)}
+.tl{display:flex;gap:3px;height:34px}
+.tl div{border-radius:6px;opacity:.35;cursor:pointer;display:flex;align-items:center;justify-content:center;font:700 12px 'Space Grotesk';color:#04131a;transition:opacity .2s}
+.tl div.done{opacity:.65}.tl div.on{opacity:1;outline:2px solid #fff;outline-offset:1px}
+.legend{display:flex;gap:18px;margin-top:8px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--c);margin-right:6px}
+.keys{font-size:12.5px;color:var(--dim)}
+@media (max-width:1100px){body{overflow:auto}main{grid-template-columns:1fr}.script p{font-size:20px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="brand">SMOKESENTRY · PRESENTER VIEW</div>
+ <div class="clock"><b id="tTotal">0:00</b><span id="tTotalL">total</span></div>
+ <div class="clock"><b id="tSection">0:00</b><span id="tSectionL">speaker</span></div>
+ <div class="pace" id="pace">on time</div>
+ <div class="spacer"></div>
+ <button id="bTimer" class="primary">Start timer</button>
+ <button id="bReset">Reset</button>
+ <button id="bOpen">Open audience window</button>
+ <a class="btn" href="guide.html" target="_blank">Guide</a>
+</header>
+<main>
+ <div class="col">
+  <div class="now" id="now"><div><div class="who" id="nWho"></div><div class="ttl" id="nTtl"></div></div>
+   <div class="st"><b id="tSlide">0:00</b><span id="tSlideL"></span><div class="sbar"><i id="sbar"></i></div></div></div>
+  <div class="script" id="script"></div>
+  <div class="left"><div class="label">Left out on purpose · expect questions on these</div><ul id="left"></ul></div>
+ </div>
+ <div class="col">
+  <div class="prev">
+   <div class="frame"><span class="tag" style="color:var(--teal)">NOW</span><iframe id="fCur" src="deck.html?preview#1" title="current slide" tabindex="-1"></iframe></div>
+   <div class="frame"><span class="tag" style="color:var(--amber)" id="nextTag">NEXT</span><iframe id="fNext" src="deck.html?preview#2" title="next slide" tabindex="-1"></iframe></div>
+  </div>
+  <div class="qa"><div class="label">Likely questions on this slide, with answers</div><div id="qa"></div></div>
+ </div>
+</main>
+<footer>
+ <div class="tl" id="tl"></div>
+ <div class="legend" id="legend"></div>
+ <div class="keys" style="margin-top:6px">→ / Space / PageDown: next · ← / PageUp: back · T: start or pause timer · O: open audience window · On the audience window press F for full screen. Both windows must be open in the same browser.</div>
+</footer>
+
+<script src="talk.js"></script>
+<script>
+const T = window.TALK, S = T.slides, SP = T.speakers, N = S.length;
+const $ = s => document.querySelector(s);
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = s => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const TOTAL = S.reduce((a, s) => a + s.secs, 0);
+const spkSecs = w => S.filter(s => s.who === w).reduce((a, s) => a + s.secs, 0);
+const bc = 'BroadcastChannel' in window ? new BroadcastChannel('smokesentry-talk') : null;
+let cur = 0, running = false, last = 0;
+const spent = new Array(N).fill(0);
+
+$('#tl').innerHTML = S.map((s, i) => `<div style="flex:${s.secs};background:${SP[s.who].color}" data-i="${i}" title="${i+1}. ${esc(s.title)} (${s.secs}s)">${i+1}</div>`).join('');
+$('#tl').addEventListener('click', e => { const d = e.target.closest('[data-i]'); if (d) go(+d.dataset.i); });
+$('#legend').innerHTML = Object.values(SP).map(p => {
+  const secs = S.filter(s => SP[s.who] === p).reduce((a, s) => a + s.secs, 0);
+  return `<span style="--c:${p.color}">${p.name} · ${p.part} · ${fmt(secs)}</span>`; }).join('');
+
+function post(id, n){ const f = $(id); try { f.contentWindow.postMessage({goto: n}, '*'); } catch (e) {} }
+$('#fCur').addEventListener('load', () => post('#fCur', cur));
+$('#fNext').addEventListener('load', () => post('#fNext', Math.min(cur + 1, N - 1)));
+
+function render(){
+  const s = S[cur], p = SP[s.who], nx = S[cur + 1];
+  document.documentElement.style.setProperty('--c', p.color);
+  $('#now').style.setProperty('--c', p.color);
+  $('#nWho').textContent = p.name;
+  $('#nTtl').textContent = `Slide ${cur + 1} of ${N} · ${s.title}`;
+  let h = s.say.map((t, i) => `<p data-n="${i + 1}">${esc(t)}</p>`).join('');
+  if (nx && nx.who !== s.who) h += `<div class="handoff">Hand-off: after this slide, ${esc(SP[nx.who].name)} takes over.</div>`;
+  if (!nx) h += `<div class="handoff">Last slide: questions. The person whose slide the question is about answers first.</div>`;
+  $('#script').innerHTML = `<div class="label">Read this, word for word</div>` + h;
+  $('#script').scrollTop = 0;
+  $('#left').innerHTML = s.left.map(t => `<li>${esc(t)}</li>`).join('');
+  $('#qa').innerHTML = s.qa.map(q => `<details open><summary>${esc(q.q)}</summary><p>${esc(q.a)}</p></details>`).join('');
+  $('#nextTag').textContent = nx ? `NEXT · ${SP[nx.who].name.split(' ')[0].toUpperCase()}` : 'END';
+  [...$('#tl').children].forEach((d, i) => { d.classList.toggle('on', i === cur); d.classList.toggle('done', i < cur); });
+  post('#fCur', cur); post('#fNext', Math.min(cur + 1, N - 1));
+  tick();
+}
+function go(n, send = true){
+  n = Math.max(0, Math.min(N - 1, n));
+  if (n === cur && send) return;
+  if (!running && n > 0 && spent.every(v => v === 0) && send) toggle();   // first advance starts the clock
+  cur = n; render();
+  try { localStorage.setItem('smokesentry-talk-slide', n); } catch (e) {}
+  if (send && bc) bc.postMessage({type: 'goto', n});
+}
+if (bc) bc.onmessage = e => { if (e.data && e.data.type === 'goto' && e.data.n !== cur) { cur = Math.max(0, Math.min(N - 1, e.data.n)); render(); } };
+
+function tick(){
+  const now = performance.now();
+  if (running) spent[cur] += (now - last) / 1000;
+  last = now;
+  const s = S[cur], total = spent.reduce((a, b) => a + b, 0);
+  const w = s.who, sec = spent.reduce((a, v, i) => a + (S[i].who === w ? v : 0), 0), tgt = spkSecs(w);
+  $('#tTotal').textContent = fmt(total);
+  $('#tTotal').style.color = total > TOTAL ? 'var(--red)' : total > TOTAL * .9 ? 'var(--amber)' : '';
+  $('#tSection').textContent = fmt(sec);
+  $('#tSection').style.color = sec > tgt ? 'var(--red)' : sec > tgt * .9 ? 'var(--amber)' : '';
+  $('#tSectionL').textContent = SP[w].name.split(' ')[0] + ' / ' + fmt(tgt);
+  $('#tTotalL').textContent = 'total / ' + fmt(TOTAL);
+  $('#tSlide').textContent = fmt(spent[cur]);
+  $('#tSlide').style.color = spent[cur] > s.secs * 1.25 ? 'var(--red)' : spent[cur] > s.secs ? 'var(--amber)' : '';
+  $('#tSlideL').textContent = `target ${fmt(s.secs)}`;
+  $('#sbar').style.width = Math.min(100, spent[cur] / s.secs * 100) + '%';
+  const planned = S.slice(0, cur).reduce((a, x) => a + x.secs, 0) + Math.min(spent[cur], s.secs);
+  const d = Math.round(total - planned);
+  $('#pace').textContent = Math.abs(d) < 5 ? 'on time' : d > 0 ? `${d}s behind` : `${-d}s ahead`;
+  $('#pace').style.color = d > 20 ? 'var(--red)' : d > 5 ? 'var(--amber)' : 'var(--green)';
+}
+setInterval(tick, 250);
+function toggle(){ running = !running; last = performance.now(); $('#bTimer').textContent = running ? 'Pause timer' : 'Start timer'; }
+$('#bTimer').onclick = toggle;
+$('#bReset').onclick = () => { spent.fill(0); if (running) toggle(); tick(); };
+function openAudience(){ window.open('deck.html#' + (cur + 1), 'smokesentry-audience', 'width=1280,height=720'); }
+$('#bOpen').onclick = openAudience;
+
+addEventListener('keydown', e => {
+  if (e.target.closest('summary')) return;
+  const k = e.key;
+  if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(k)) { e.preventDefault(); go(cur + 1); }
+  else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(k)) { e.preventDefault(); go(cur - 1); }
+  else if (k === 'Home') go(0);
+  else if (k === 'End') go(N - 1);
+  else if (k === 't' || k === 'T') toggle();
+  else if (k === 'o' || k === 'O') openAudience();
+});
+
+try { cur = Math.max(0, Math.min(N - 1, +(localStorage.getItem('smokesentry-talk-slide') || 0))); } catch (e) {}
+render();
+</script>
+</body>
+</html>

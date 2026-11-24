@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmokeSentry · Talk Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f5f7fb;color:#0f172a;font:17px/1.6 Inter,system-ui,sans-serif}
+main{max-width:900px;margin:0 auto;padding:40px 24px 80px}
+.kicker{font:600 13px 'Space Grotesk';letter-spacing:.2em;text-transform:uppercase;color:#0d9488}
+h1{font:700 40px/1.1 'Space Grotesk';margin:10px 0 8px;letter-spacing:-.02em}
+h2{font:700 26px 'Space Grotesk';margin:40px 0 10px}
+h3{font:700 20px 'Space Grotesk';margin:26px 0 6px}
+.btns a{display:inline-block;margin:14px 10px 0 0;padding:10px 16px;border-radius:10px;background:#0d9488;color:#fff;text-decoration:none;font-weight:600}
+.btns a.alt{background:#fff;color:#0f172a;border:1px solid rgba(15,23,42,.15)}
+.card{background:#fff;border:1px solid rgba(15,23,42,.12);border-radius:16px;padding:18px 22px;margin:12px 0}
+.who{font:600 13px 'Space Grotesk';letter-spacing:.14em;text-transform:uppercase}
+.say p{margin:8px 0}
+.left li{color:#475569}
+details{border-top:1px solid rgba(15,23,42,.08);padding:8px 0}
+summary{font-weight:600;cursor:pointer}
+details p{color:#334155;margin:6px 0 0}
+</style>
+</head>
+<body>
+<main>
+ <div class="kicker">DATA 255 · Fall 2026 · SmokeSentry final talk</div>
+ <h1>Talk guide: script and likely questions</h1>
+ <p>Everything here is generated from <code>talk.js</code>, the same file the presenter view reads. Every number comes from a <code>runs/*/metrics_*.json</code>, <code>runs/latency_*.json</code> or <code>index/stats.json</code> file in the team Drive folder.</p>
+ <div class="btns"><a href="presenter.html">Open presenter view</a><a class="alt" href="deck.html">Open slides</a></div>
+ <h2 id="run">How to run it</h2>
+ <ul>
+  <li>Open <b>presenter.html</b> on your laptop and press <b>O</b> to open the audience window; drag it to the projector and press <b>F</b> for full screen.</li>
+  <li>Arrow keys or Space move both windows together (same browser). The timer starts on the first advance.</li>
+  <li>Live demo: <code>python -m smokesentry.app.server --data-root &lt;demo data&gt; --runs-root &lt;runs&gt;</code>, open <code>http://127.0.0.1:8000</code>, pick split <i>test</i>, fire <code>20190930_FIRE_om-s-mobo-c</code>, run <code>temporal-gru-dinov2s-frozen-v1-T8-s2-20261123</code>, detector <code>det-yolo11s-dfire-figlib-s0-20261116</code>, speed 200, play; then switch the run to <code>encoder-dinov2s-frozen-s0-20261117</code> to show the tile grid. Backup video: <code>demo/smokesentry_demo_backup.mp4</code> on the team Drive.</li>
+ </ul>
+ <h2 id="who">Who says what</h2>
+ <div id="script"></div>
+</main>
+<script src="talk.js"></script>
+<script>
+const T = window.TALK, esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+document.getElementById('script').innerHTML = T.slides.map((s, i) => { const p = T.speakers[s.who]; return `
+ <div class="card"><div class="who" style="color:${p.color}">${i + 1} · ${esc(p.name)} · ${fmt(s.secs)}</div>
+ <h3>${esc(s.title)}</h3>
+ <div class="say">${s.say.map(t => `<p>${esc(t)}</p>`).join('')}</div>
+ <p><b>Left out on purpose</b></p><ul class="left">${s.left.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+ <p><b>Likely questions</b></p>${s.qa.map(q => `<details><summary>${esc(q.q)}</summary><p>${esc(q.a)}</p></details>`).join('')}
+ </div>`; }).join('');
+</script>
+</body>
+</html>

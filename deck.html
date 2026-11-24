@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmokeSentry · Final Talk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Same framework and light theme as our DATA 255 talk deck (data255-talk). */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#e9edf3;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+#stage{--bg:#f5f7fb;--panel:#ffffff;--panel2:#eef2f8;--line:rgba(15,23,42,.12);--ink:#0f172a;--muted:#475569;--dim:#64748b;
+ --teal:#0d9488;--blue:#2563eb;--amber:#d97706;--pink:#db2777;--coral:#e11d48;--violet:#7c3aed;--green:#16a34a;--ember:#ea580c;
+ position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:center;overflow:hidden;color:var(--ink);
+ background:radial-gradient(1100px 650px at 85% -15%,#ffedd5 0%,transparent 60%),radial-gradient(900px 600px at -10% 115%,#ccfbf1 0%,transparent 55%),var(--bg)}
+#stage::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+ background-image:linear-gradient(rgba(15,23,42,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,.05) 1px,transparent 1px);background-size:40px 40px;
+ -webkit-mask-image:radial-gradient(ellipse at 50% 40%,#000 30%,transparent 80%);mask-image:radial-gradient(ellipse at 50% 40%,#000 30%,transparent 80%)}
+.slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .55s ease,visibility 0s .55s}
+.slide.active{opacity:1;visibility:visible;transition:opacity .55s ease}
+.pad{position:absolute;inset:60px 84px 88px}
+.kicker{font:600 15px/1.2 'Space Grotesk',sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--teal)}
+h2,h3{font-family:'Space Grotesk',sans-serif;letter-spacing:-.02em}
+h2.t{font-size:48px;line-height:1.06;margin-top:12px;font-weight:700}
+.muted{color:var(--muted)}.dim{color:var(--dim)}
+.teal{color:var(--teal)}.ember{color:var(--ember)}.coral{color:var(--coral)}.blue{color:var(--blue)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px 26px;box-shadow:0 1px 2px rgba(15,23,42,.05),0 10px 30px rgba(15,23,42,.07)}
+.chip{display:inline-block;font:600 13px/1 'Space Grotesk';letter-spacing:.06em;text-transform:uppercase;padding:7px 11px;border-radius:999px;background:rgba(13,148,136,.1);color:var(--teal);border:1px solid rgba(13,148,136,.35)}
+.note{font-size:15px;color:var(--dim);line-height:1.45}
+.row{display:flex;gap:22px}
+.mono{font-family:'JetBrains Mono',monospace}
+.a{opacity:0}
+.slide.active .a{animation:rise .8s cubic-bezier(.2,.8,.2,1) var(--d,0s) both}
+.slide.active .grow>i{animation:grow 1.3s cubic-bezier(.2,.8,.2,1) var(--d,0s) both}
+@keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+@keyframes grow{from{width:0}}
+.static .a{animation:none!important;opacity:1!important}
+.static .grow>i{animation:none!important}
+.stat .n{font:700 50px/1 'Space Grotesk';letter-spacing:-.03em}
+.stat .l{font-size:16px;color:var(--muted);margin-top:10px;line-height:1.35}
+/* split table */
+.split{display:grid;grid-template-columns:200px 70px 1fr 74px;gap:12px 14px;align-items:center;font-size:18px}
+.split .h{font:600 13px 'Space Grotesk';letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.split .r{text-align:right;font-variant-numeric:tabular-nums}
+.split .tr{height:14px;border-radius:7px;background:rgba(148,163,184,.15);overflow:hidden}
+.split .tr i{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,#99f6e4,var(--teal))}
+.split .tr.ho i{background:linear-gradient(90deg,#fed7aa,var(--ember))}
+/* steps */
+.step{flex:1;display:flex;flex-direction:column;gap:14px;min-height:290px}
+.step .b{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font:700 20px 'Space Grotesk';color:#fff;background:var(--ember)}
+.step b{font:700 24px 'Space Grotesk'}
+.step p{font-size:18px;line-height:1.45;color:#334155}
+.step.dark{background:#0f172a;border-color:#0f172a}.step.dark b{color:#fff}.step.dark p{color:#cbd5e1}
+.met{display:grid;grid-template-columns:170px 1fr;gap:26px 24px;font-size:24px;align-items:center}
+.met .k{font:700 24px 'Space Grotesk';color:var(--ember)}
+/* latency bars */
+.lat{display:grid;grid-template-columns:300px 1fr 110px;gap:16px 16px;align-items:center;font-size:19px}
+.lat .tr{height:30px;border-radius:8px;background:rgba(148,163,184,.13);overflow:hidden}
+.lat .tr i{display:block;height:100%;border-radius:8px}
+.lat .v{font:700 22px 'Space Grotesk';text-align:right;font-variant-numeric:tabular-nums}
+.lat .g{font:600 13px 'Space Grotesk';letter-spacing:.14em;text-transform:uppercase;color:var(--dim);grid-column:1/-1;margin-top:6px}
+/* demo */
+.shot{position:absolute;left:0;top:132px;width:790px;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 10px 30px rgba(15,23,42,.12)}
+.shot img{display:block;width:100%}
+.watch{display:flex;gap:16px;align-items:flex-start;padding:16px 0;border-bottom:1px solid var(--line)}
+.watch:last-child{border:0}
+.watch .i{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;font:700 18px 'Space Grotesk';color:#fff;background:var(--ember)}
+.watch b{font:700 21px 'Space Grotesk';display:block;margin-bottom:4px}
+.watch span{font-size:17.5px;color:var(--muted);line-height:1.4}
+.live{display:inline-flex;align-items:center;gap:8px;font:700 14px 'Space Grotesk';letter-spacing:.14em;color:var(--coral)}
+.live::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--coral);animation:blink 1.4s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+.flowp{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:16px}
+.flowp span{padding:9px 11px;border-radius:10px;background:rgba(13,148,136,.08);border:1px solid rgba(13,148,136,.3);font-size:15px;white-space:nowrap}
+.flowp i{font-style:normal;color:var(--teal);font-weight:700}
+/* HUD */
+#hud{position:absolute;left:84px;right:84px;bottom:22px;height:30px;display:flex;align-items:center;justify-content:space-between;font-size:15px;color:var(--muted);z-index:20;pointer-events:none}
+#hud .who{display:flex;align-items:center;gap:10px}
+#hud .dot{width:10px;height:10px;border-radius:50%;box-shadow:0 0 12px currentColor}
+#prog{position:absolute;left:0;right:0;bottom:0;height:5px;display:flex;gap:2px;z-index:20}
+#prog i{flex:1;opacity:.22;transition:opacity .4s}
+#prog i.on{opacity:1}
+</style>
+</head>
+<body>
+<div id="stage">
+
+<!-- 1 · DATA -->
+<section class="slide" data-who="ayush">
+ <div class="pad">
+  <div class="kicker a">Data · HPWREN FIgLib</div>
+  <h2 class="t a" style="--d:.1s">524 fire sequences, split <span class="teal">by fire</span>, never by frame</h2>
+  <div class="card a" style="--d:.25s;position:absolute;left:0;top:140px;width:640px">
+   <div class="split">
+    <span class="h">split</span><span class="h r">fires</span><span class="h">frames</span><span class="h r">smoke</span>
+    <span>train</span><span class="r">176</span><div class="tr grow" style="--d:.4s"><i style="width:89%"></i></div><span class="r">50.4%</span>
+    <span>val</span><span class="r">64</span><div class="tr grow" style="--d:.45s"><i style="width:33%"></i></div><span class="r">50.4%</span>
+    <span>test</span><span class="r">57</span><div class="tr grow" style="--d:.5s"><i style="width:29%"></i></div><span class="r">50.9%</span>
+    <span>check <span class="dim">(9 boxed)</span></span><span class="r">9</span><div class="tr grow" style="--d:.55s"><i style="width:4%"></i></div><span class="r">50.7%</span>
+    <span>test2 <span class="dim">(2022+)</span></span><span class="r">192</span><div class="tr ho grow" style="--d:.6s"><i style="width:100%"></i></div><span class="r">50.8%</span>
+    <span>omitted <span class="dim">(mono)</span></span><span class="r">26</span><div class="tr ho grow" style="--d:.65s"><i style="width:13%"></i></div><span class="r">51.6%</span>
+   </div>
+   <p class="note" style="margin-top:18px">Bars: frames per split (test2 = 15,440). Fires hashed into splits with seed 255; all cameras of a fire stay together. Labels are per frame (offset ≥ 0 = smoke); no smoke masks are public.</p>
+  </div>
+  <div class="card a" style="--d:.5s;position:absolute;left:0;top:612px;width:640px;height:152px">
+   <span class="chip">Preprocessing, once per frame</span>
+   <div class="flowp">
+    <span>raw frame</span><i>→</i><span>resize 1392 × 1856</span><i>→</i><span>crop sky, 352 px</span><i>→</i><span>45 tiles · 224 px</span><i>→</i><span>cached features</span>
+   </div>
+  </div>
+  <div class="a" style="--d:.35s;position:absolute;right:0;top:140px;width:740px">
+   <div style="position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line)">
+    <img src="img/frame_tiles.jpg" alt="Processed FIgLib frame, 10 minutes after ignition, with the 45-tile grid drawn on top; the two tiles over the plume are highlighted" style="display:block;width:100%">
+    <svg viewBox="0 0 1856 1040" style="position:absolute;inset:0;width:100%;height:100%" id="tilegrid"></svg>
+   </div>
+   <p class="note" style="margin-top:8px">Orange: the two tiles our encoder scores 1.0, ten minutes after ignition (test fire).</p>
+  </div>
+  <div class="row" style="position:absolute;right:0;top:612px;width:740px">
+   <div class="card stat a" style="--d:.55s;flex:1"><div class="n teal">41,447</div><div class="l">frames, ~80 per fire, one per minute</div></div>
+   <div class="card stat a" style="--d:.65s;flex:1"><div class="n coral">0.670</div><div class="l">F1 of “always smoke” on val</div></div>
+   <div class="card stat a" style="--d:.75s;flex:1"><div class="n ember">98</div><div class="l">fires with missing frames, kept as gaps</div></div>
+  </div>
+ </div>
+</section>
+
+<!-- 2 · EVALUATION -->
+<section class="slide" data-who="ayush">
+ <div class="pad">
+  <div class="kicker a">Evaluation protocol</div>
+  <h2 class="t a" style="--d:.1s">Every setting is chosen on validation; <span class="ember">test is scored once</span></h2>
+  <div class="row" style="margin-top:40px">
+   <div class="card step a" style="--d:.25s"><span class="b">1</span><b>Train</b><p>Encoder and temporal heads, early stop on val average precision.</p></div>
+   <div class="card step a" style="--d:.35s"><span class="b">2</span><b>Tune on val</b><p>Frame threshold, and the alarm: <span class="mono">k</span> frames in a row with p ≥ <span class="mono">θ</span>.</p></div>
+   <div class="card step a" style="--d:.45s"><span class="b">3</span><b>Cap false alarms</b><p>A temporal model may not raise more alarms than the single-frame baseline.</p></div>
+   <div class="card step dark a" style="--d:.55s"><span class="b">4</span><b>Score test once</b><p>45 runs after the freeze; settings recomputed from val predictions only.</p></div>
+  </div>
+  <div class="card a" style="--d:.7s;margin-top:36px;padding:30px 30px">
+   <div class="met">
+    <span class="k">Ranking</span><span>ROC-AUC and average precision: separation without picking a threshold</span>
+    <span class="k">Speed</span><span>Penalized time to detection: a missed fire costs its whole post-ignition horizon</span>
+    <span class="k">Cost</span><span>False alarms per camera-hour, always with the raw event count</span>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- 3 · LATENCY -->
+<section class="slide" data-who="ayush">
+ <div class="pad">
+  <div class="kicker a">Deployment · latency</div>
+  <h2 class="t a" style="--d:.1s">The pipeline keeps up with one frame a minute, <span class="teal">even on a CPU</span></h2>
+  <div class="card a" style="--d:.25s;position:absolute;left:0;top:150px;width:900px">
+   <div class="lat">
+    <span class="g">GPU · RTX 5080 Laptop · ms per frame (scale 0–60)</span>
+    <span>MobileNetV3 encoder</span><div class="tr grow" style="--d:.4s"><i style="width:16%;background:#94a3b8"></i></div><span class="v">9.6</span>
+    <span>DINOv2 encoder</span><div class="tr grow" style="--d:.5s"><i style="width:84%;background:var(--teal)"></i></div><span class="v">50.6</span>
+    <span><b>DINOv2 + GRU T8 pipeline</b></span><div class="tr grow" style="--d:.6s"><i style="width:86%;background:var(--ember)"></i></div><span class="v">51.4</span>
+    <span class="g" style="margin-top:22px">CPU · Core Ultra 9 275HX · ms per frame (scale 0–1000)</span>
+    <span>MobileNetV3 encoder</span><div class="tr grow" style="--d:.7s"><i style="width:14%;background:#94a3b8"></i></div><span class="v">143.8</span>
+    <span>DINOv2 encoder</span><div class="tr grow" style="--d:.8s"><i style="width:87%;background:var(--teal)"></i></div><span class="v">872.2</span>
+    <span><b>DINOv2 + GRU T8 pipeline</b></span><div class="tr grow" style="--d:.9s"><i style="width:88%;background:var(--ember)"></i></div><span class="v">880.8</span>
+   </div>
+   <p class="note" style="margin-top:18px">One frame = 45 tiles. Mean of 200 timed runs after 50 warm-ups; forward pass only (no decode or tiling).</p>
+  </div>
+  <div style="position:absolute;right:0;top:150px;width:500px;display:flex;flex-direction:column;gap:20px">
+   <div class="card stat a" style="--d:.5s"><div class="n ember">51 ms</div><div class="l">full pipeline per frame on the GPU</div></div>
+   <div class="card stat a" style="--d:.65s"><div class="n teal">0.88 s</div><div class="l">full pipeline per frame on the CPU</div></div>
+   <div class="card stat a" style="--d:.8s"><div class="n">60 s</div><div class="l">between frames from an HPWREN camera. The encoder is nearly all of the cost; the temporal head adds under 1 ms on the GPU.</div></div>
+  </div>
+ </div>
+</section>
+
+<!-- 4 · DEMO -->
+<section class="slide" data-who="ayush">
+ <div class="pad">
+  <div class="kicker a">Live demo · replay app</div>
+  <h2 class="t a" style="--d:.1s">Replaying a real test fire, frame by frame</h2>
+  <div class="shot a" style="--d:.25s"><img src="img/demo_replay.jpg" alt="Replay app on test fire 20190930_FIRE_om-s-mobo-c: two tiles over the plume score 1.00, a detector box covers the smoke, and the timeline shows the alarm just after ignition"></div>
+  <div style="position:absolute;right:0;top:132px;width:590px">
+   <div class="live a" style="--d:.3s">LIVE · python -m smokesentry.app.server</div>
+   <div class="card a" style="--d:.4s;margin-top:14px;padding:6px 24px">
+    <div class="watch"><span class="i">1</span><div><b>Timeline</b><span>GRU T8 alarm 176 s after the first visible plume, at the val-tuned θ and k</span></div></div>
+    <div class="watch"><span class="i">2</span><div><b>Tile grid</b><span>Encoder tile scores light up the two tiles with the plume, with no masks in training</span></div></div>
+    <div class="watch"><span class="i">3</span><div><b>Boxes</b><span>The D-Fire detector boxes the same smoke</span></div></div>
+   </div>
+   <div class="card a" style="--d:.55s;margin-top:18px">
+    <span class="chip">Demo fires · test split · picked before any model output</span>
+    <p style="font-size:17px;line-height:1.6;margin-top:12px;color:#334155">om-s, 30 Sep 2019: developing plume<br>Holyflareup, 2018: low cloud before ignition<br>Riverfire, 2019: 120 s gap at ignition</p>
+   </div>
+  </div>
+ </div>
+</section>
+
+<div id="hud"><div class="who"><span class="dot" id="hdot"></span><span id="hname"></span></div><span id="hnum"></span></div>
+<div id="prog"></div>
+</div>
+
+<script src="talk.js"></script>
+<script>
+const PREVIEW = new URLSearchParams(location.search).has('preview');
+if (PREVIEW) document.body.classList.add('static');
+const $ = s => document.querySelector(s);
+const KEY = 'smokesentry-talk';
+
+/* ---------- stage scaling ---------- */
+const stage = $('#stage');
+function fit(){ const s = Math.min(innerWidth / 1600, innerHeight / 900); stage.style.transform = `translate(-50%,-50%) scale(${s})`; }
+addEventListener('resize', fit); fit();
+
+/* ---------- 45-tile grid (TILE 224, STRIDE 204, 5 x 9) ---------- */
+(function(){
+  const hot = new Set([12, 13]); let g = '';
+  for (let r = 0; r < 5; r++) for (let c = 0; c < 9; c++) {
+    const i = r * 9 + c, on = hot.has(i);
+    g += `<rect x="${c*204+3}" y="${r*204+3}" width="218" height="218" rx="6" fill="${on ? 'rgba(234,88,12,.28)' : 'none'}" stroke="${on ? '#ea580c' : 'rgba(255,255,255,.55)'}" stroke-width="${on ? 8 : 3}"/>`;
+  }
+  $('#tilegrid').innerHTML = g;
+})();
+
+/* ---------- HUD + progress ---------- */
+const slides = [...document.querySelectorAll('.slide')];
+const SP = TALK.speakers;
+$('#prog').innerHTML = slides.map(s => `<i style="background:${SP[s.dataset.who].color}"></i>`).join('');
+const progI = [...document.querySelectorAll('#prog i')];
+
+/* ---------- navigation and sync ---------- */
+let cur = -1;
+const bc = (!PREVIEW && 'BroadcastChannel' in window) ? new BroadcastChannel(KEY) : null;
+function go(n, send = true){
+  n = Math.max(0, Math.min(slides.length - 1, n));
+  if (n === cur) return;
+  cur = n;
+  slides.forEach((s, i) => s.classList.toggle('active', i === n));
+  const sp = SP[slides[n].dataset.who];
+  $('#hdot').style.background = sp.color; $('#hdot').style.color = sp.color;
+  $('#hname').textContent = sp.name + ' · ' + sp.part;
+  $('#hnum').textContent = (n + 1) + ' / ' + slides.length;
+  progI.forEach((p, i) => p.classList.toggle('on', i <= n));
+  if (PREVIEW) return;
+  history.replaceState(null, '', '#' + (n + 1));
+  try { localStorage.setItem(KEY + '-slide', n); } catch (e) {}
+  if (send && bc) bc.postMessage({type: 'goto', n});
+}
+if (bc) bc.onmessage = e => { if (e.data && e.data.type === 'goto') go(e.data.n, false); };
+addEventListener('message', e => { if (e.data && typeof e.data.goto === 'number') go(e.data.goto, false); });
+let start = parseInt(location.hash.slice(1), 10) - 1;
+if (isNaN(start)) { try { start = +(localStorage.getItem(KEY + '-slide') || 0); } catch (e) { start = 0; } }
+go(start, false);
+
+if (!PREVIEW){
+  addEventListener('keydown', e => {
+    const k = e.key;
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(k)) { e.preventDefault(); go(cur + 1); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(k)) { e.preventDefault(); go(cur - 1); }
+    else if (k === 'Home') go(0);
+    else if (k === 'End') go(slides.length - 1);
+    else if (k === 'f' || k === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}); }
+  });
+  let tx = null;
+  addEventListener('touchstart', e => tx = e.touches[0].clientX, {passive: true});
+  addEventListener('touchend', e => { if (tx === null) return; const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1)); tx = null; });
+}
+</script>
+</body>
+</html>
