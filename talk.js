@@ -61,6 +61,83 @@ window.TALK = {
    ]
   },
   {
+   "title": "Why the encoder matters",
+   "who": "manav",
+   "secs": 40,
+   "say": [
+    "My section is the tile encoder — the first place SmokeSentry can quietly fail.",
+    "Each frame becomes forty-five tiles. The encoder turns those into features. Temporal heads and the alarm only ever see that cache.",
+    "So if the encoder does not separate smoke from clear sky, later stages cannot invent that ranking."
+   ],
+   "left": [
+    "Exact MobileNet versus DINOv2 numbers.",
+    "Why F1 can mislead on a balanced split."
+   ],
+   "qa": [
+    { "q": "Why not skip straight to the temporal model?", "a": "Temporal heads train on cached encoder features. A collapsed encoder freezes a near-chance ranking into every head that follows." },
+    { "q": "Is this the full E1 matrix?", "a": "No — that is covered on the next slide. Here I only need the pipeline story: tiles, encoder, temporal, alarm." }
+   ]
+  },
+  {
+   "title": "MobileNet collapsed under weak tile labels",
+   "who": "manav",
+   "secs": 45,
+   "say": [
+    "This is a one-seed proxy, not a formal three-by-three E1 sweep.",
+    "On validation, MobileNet average precision is about 0.54 and ROC about 0.56 — near chance. Frozen DINOv2 reaches about 0.88 AP and 0.84 ROC. Test keeps the same gap.",
+    "C3 had zero positive tiles. Positives are SOURCE_NONE with tile targets of minus one, so image-level MIL never saw a positive tile label.",
+    "That is why we trust AP and ROC here, not F1 alone."
+   ],
+   "left": [
+    "Exact run ids.",
+    "Whether architecture capacity also mattered.",
+    "Fine-tuned DINOv2."
+   ],
+   "qa": [
+    { "q": "Which runs?", "a": "MobileNet encoder-mnv3l-s0-20261116, cache mnv3l-v2. DINOv2 encoder-dinov2s-frozen-s0-20261117, cache dinov2s-frozen-v1. Values from metrics_*.json only." },
+    { "q": "Did you evaluate fine-tuned DINOv2?", "a": "No formal E1 fine-tuned artifact. That job was cut with the multi-seed matrix." },
+    { "q": "Why not tables_val.csv?", "a": "Its MobileNet rows mix v1 and v2. We never quote those." }
+   ]
+  },
+  {
+   "title": "DINOv2 reload and reproducibility",
+   "who": "manav",
+   "secs": 40,
+   "say": [
+    "Production checkpoints need the real hub DINOv2, not the offline stub from smoke tests.",
+    "On the November 17 run we rebuilt a DinoVisionTransformer, loaded weights, and extracted one fire: dimension 384, patch tokens 256 by 384, output shape 81 by 45 by 384 in float16, C4 metadata valid.",
+    "That is a loader check on CPU. Separately, M-7 rescored Ayush’s MobileNet predictions and matched validation and test F1 bit for bit."
+   ],
+   "left": [
+    "Which fire was extracted.",
+    "GPU timing.",
+    "Whether quality changed after the reload fix."
+   ],
+   "qa": [
+    { "q": "Which fire?", "a": "Check fire 20160604_FIRE_rm-n-mobo-c, eighty-one frames, isolated encoder id so the shared cache was not overwritten." },
+    { "q": "New quality claim?", "a": "No. Ranking numbers still come from the existing metrics JSON for that run." }
+   ]
+  },
+  {
+   "title": "Accuracy, speed, and takeaway",
+   "who": "manav",
+   "secs": 40,
+   "say": [
+    "Putting quality next to cost: Ayush’s GPU forward timings are about 9.6 milliseconds for MobileNet, 50.6 for DINOv2, and 51.4 for the full pipeline. On that workstation’s CPU the full pipeline is about 0.88 seconds.",
+    "Cameras send roughly one frame a minute, so even the slower encoder stays inside the budget.",
+    "Bottom line: frozen DINOv2 is the stronger one-seed proxy encoder. Formal E1 was cut, and we are not calling the system production ready."
+   ],
+   "left": [
+    "Manav laptop CPU timings.",
+    "Temporal GRU gains.",
+    "Edge hardware."
+   ],
+   "qa": [
+    { "q": "Are those your laptop numbers?", "a": "No. They are Ayush’s latency JSON, model-forward only. My laptop CPU run is a separate M-5 deliverable." },
+    { "q": "Is the model production ready?", "a": "No. We recommend frozen DINOv2 under the available one-seed evidence only." }
+   ]
+  },
+  {
    "title": "Latency: real time even on a CPU",
    "who": "ayush",
    "secs": 90,
